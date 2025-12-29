@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.db.awards_db import load_csv
+from app.services.awards_service import get_awards_intervals
 
 def create_app() -> FastAPI:
     configure_logging()
@@ -29,13 +30,13 @@ async def lifespan(app: FastAPI):
     try:
         load_csv("data/movielist.csv", db)
         yield
-    finally:
-        
+    finally:        
         db.close()
 
 
-
-
+@app.get("/producers/awards-intervals")
+def get_producers_awards_interval():
+    return get_awards_intervals()
 
 
 

@@ -1,21 +1,7 @@
 
-from app.db.session import get_db
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from sqlalchemy.orm import Session
+from app.db.models import Movie
 import csv
-
-
-Base = declarative_base()
-
-class Movie(Base):
-    __tablename__ = "movies"
-
-    id=Column(Integer, primary_key=True, index=True)
-    year=Column(Integer)
-    title=Column(String)
-    studios=Column(String)
-    producers=Column(String)
-    winner=Column(String)  
 
 
 def load_csv(file_path: str, db: Session) -> None:
