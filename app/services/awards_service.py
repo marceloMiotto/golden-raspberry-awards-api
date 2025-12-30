@@ -1,31 +1,29 @@
-from app.db.session import get_db
-from app.db.models import Movie
-from sqlalchemy import select, func
 import re
 from collections import defaultdict
 from typing import DefaultDict, Dict, Iterable, List, Tuple, Any
 
+from sqlalchemy import select, func
+from app.db.models import Movie
 
-def get_winners(db):    
-    statment = (
+
+def get_winners(db):
+    stmt = (
         select(Movie.producers, Movie.year)
         .where(func.trim(func.lower(Movie.winner)) == "yes")
     )
-    return db.execute(statment).all()
+    return db.execute(stmt).all()
 
 
 def _parse_producers(producers_str: str) -> List[str]:
-    
     if not producers_str:
         return []
-    
+
     normalized = re.sub(r"\s+and\s+", ",", producers_str.strip(), flags=re.IGNORECASE)
     parts = [p.strip() for p in normalized.split(",")]
     return [p for p in parts if p]
 
 
 def calculate_intervals(winners: Iterable[Tuple[str, int]]) -> Dict[str, List[Dict[str, Any]]]:
-       
     years_by_producer: DefaultDict[str, List[int]] = defaultdict(list)
 
     for producers_str, year in winners:
@@ -35,14 +33,13 @@ def calculate_intervals(winners: Iterable[Tuple[str, int]]) -> Dict[str, List[Di
         for producer in _parse_producers(producers_str):
             years_by_producer[producer].append(year)
 
-    
     all_intervals: List[Dict[str, Any]] = []
 
     for producer, years in years_by_producer.items():
         unique_years = sorted(set(years))
         if len(unique_years) < 2:
             continue
-        
+
         for prev_year, next_year in zip(unique_years, unique_years[1:]):
             all_intervals.append({
                 "producer": producer,
@@ -51,7 +48,6 @@ def calculate_intervals(winners: Iterable[Tuple[str, int]]) -> Dict[str, List[Di
                 "followingWin": next_year
             })
 
-    
     if not all_intervals:
         return {"min": [], "max": []}
 
@@ -64,8 +60,6 @@ def calculate_intervals(winners: Iterable[Tuple[str, int]]) -> Dict[str, List[Di
     }
 
 
-def get_awards_intervals(db) -> dict:  
-    db = get_db()  
+def get_awards_intervals(db) -> dict:
     winners = get_winners(db)
     return calculate_intervals(winners)
-    

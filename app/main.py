@@ -1,11 +1,34 @@
+import os
+from pathlib import Path
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
+from sqlalchemy.orm import Session
+
 from app.core.logging import configure_logging
 from app.api.routes import router
-from contextlib import asynccontextmanager
-from sqlalchemy.orm import Session
-from app.db.session import SessionLocal
+from app.db.session import SessionLocal, engine
 from app.db.awards_db import load_csv
-from app.services.awards_service import get_awards_intervals
+from app.db.models import Base
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)    
+    Base.metadata.create_all(bind=engine)
+
+    db: Session = SessionLocal()
+    try:
+        default_csv = Path(__file__).resolve().parent / "data" / "movielist.csv"
+        csv_path = os.getenv("CSV_PATH", str(default_csv))
+        load_csv(csv_path, db)
+        yield
+    finally:
+        
+        db.close()
+
 
 def create_app() -> FastAPI:
     configure_logging()
@@ -18,25 +41,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(router, prefix="/api")
-
     return app
 
+
 app = create_app()
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    
-    db: Session = SessionLocal()
-    try:
-        load_csv("data/movielist.csv", db)
-        yield
-    finally:        
-        db.close()
-
-
-@app.get("/producers/awards-intervals")
-def get_producers_awards_interval():
-    return get_awards_intervals()
-
-
-
