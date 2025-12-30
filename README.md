@@ -16,7 +16,7 @@ Docker installed
 
 2. Run integration tests: docker run --rm golden-raspberry-api pytest -q
 
-### Expected output (example): 2 passed in X.XXs
+   Expected output (example): 2 passed in X.XXs
 
 3. Start the API container: docker run --rm -p 8000:8000 golden-raspberry-api
 
@@ -58,5 +58,7 @@ Example response:
 ### Notes:
 
 The application loads the CSV file automatically at startup.
+
 Only integration tests are implemented, as required.
+
 The project works with any CSV following the same structure.
